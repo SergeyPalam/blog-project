@@ -1,0 +1,10 @@
+[workspace]
+members = [
+    "blog-server",
+    "blog-client",
+    "blog-cli",
+    "blog-wasm"
+]
+resolver = "2"
+
+[workspace.dependencies]
