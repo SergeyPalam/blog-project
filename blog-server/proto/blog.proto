@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package proto;
+
+service BlogService {
+    rpc Register(RegisterRequest) returns (AuthResponse);
+    /*rpc Login(LoginRequest) returns (AuthResponse);
+    rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
+    rpc GetPost(GetPostRequest) returns (PostResponse);
+    rpc UpdatePost(UpdatePostRequest) returns (UpdatePostResponse);
+    rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
+    rpc ListPosts(ListPostsRequest) returns (ListPostsResponse);*/
+}
+
+message RegisterRequest {
+
+}
+
+/*message LoginRequest {
+
+}*/
+
+message AuthResponse {
+
+}
+
+/*
+message CreatePostRequest {
+
+}
+
+message CreatePostResponse {
+
+}
+
+message GetPostRequest {
+
+}
+
+message PostResponse {
+
+}
+
+message UpdatePostRequest {
+
+}
+
+message UpdatePostResponse {
+
+}
+
+message DeletePostRequest {
+
+}
+
+message DeletePostResponse {
+    int64 id = 1;
+}
+
+message ListPostsRequest {
+
+}
+
+message ListPostsResponse {
+
+}*/
