@@ -4,29 +4,32 @@ package proto;
 
 service BlogService {
     rpc Register(RegisterRequest) returns (AuthResponse);
-    /*rpc Login(LoginRequest) returns (AuthResponse);
+    rpc Login(LoginRequest) returns (AuthResponse);
     rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
     rpc GetPost(GetPostRequest) returns (PostResponse);
     rpc UpdatePost(UpdatePostRequest) returns (UpdatePostResponse);
     rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
-    rpc ListPosts(ListPostsRequest) returns (ListPostsResponse);*/
+    rpc ListPosts(ListPostsRequest) returns (ListPostsResponse);
 }
 
 message RegisterRequest {
-
+    String username = 1;
+    String password = 2;
+    String email = 3;
 }
 
-/*message LoginRequest {
-
-}*/
+message LoginRequest {
+    String username = 1;
+    String password = 2;
+}
 
 message AuthResponse {
 
 }
 
-/*
 message CreatePostRequest {
-
+    String title = 1;
+    String content = 2;
 }
 
 message CreatePostResponse {
@@ -42,7 +45,8 @@ message PostResponse {
 }
 
 message UpdatePostRequest {
-
+    String title = 1;
+    String content = 2;
 }
 
 message UpdatePostResponse {
@@ -63,4 +67,4 @@ message ListPostsRequest {
 
 message ListPostsResponse {
 
-}*/
+}
