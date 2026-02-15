@@ -3,6 +3,8 @@ use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, D
 use chrono::{Utc, TimeDelta};
 use anyhow::{Result, bail};
 
+use super::config::SecretConfig;
+
 #[derive(Serialize, Deserialize)]
 pub struct Claims {
     user_id: i64,
@@ -18,11 +20,11 @@ pub struct JwtService {
 }
 
 impl JwtService {
-    pub fn new(secret: &str) -> Self {
+    pub fn new(secret_config: &SecretConfig) -> Self {
         let header = Header::new(Algorithm::HS256);
         let validation = Validation::new(Algorithm::HS256);
-        let enc_key = EncodingKey::from_secret(secret.as_bytes());
-        let dec_key = DecodingKey::from_secret(secret.as_bytes());
+        let enc_key = EncodingKey::from_secret(secret_config.jwt_secret.as_bytes());
+        let dec_key = DecodingKey::from_secret(secret_config.jwt_secret.as_bytes());
         Self {
             enc_key,
             dec_key,

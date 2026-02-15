@@ -7,13 +7,17 @@ use anyhow::Result;
 use sqlx::PgPool;
 use dotenv::dotenv;
 
+use std::sync::Arc;
+
 use config::Config;
 use database::{create_pool, run_migrations};
 use logging::init_logging;
+use jwt::JwtService;
 
 pub struct AppState {
-    config: Config,
-    db_pool: PgPool,    
+    pub config: Config,
+    pub db_pool: PgPool,
+    pub jwt_service: Arc<JwtService>,
 }
 
 pub async fn init() -> Result<AppState> {
@@ -25,8 +29,10 @@ pub async fn init() -> Result<AppState> {
     tracing::info!("Run migrations...");
     run_migrations(&db_pool).await?;
     tracing::info!("Migration finished");
+    let jwt_service = JwtService::new(&config.secret_config);
     Ok(AppState{
         config,
         db_pool,
+        jwt_service: Arc::new(jwt_service),
     })
 }

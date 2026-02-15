@@ -1,10 +1,12 @@
-use actix_web::{web, HttpServer, App};
+pub mod domain;
+pub mod infrastructure;
+pub mod presentation;
+pub mod application;
+
+use actix_web::{App, HttpServer, web};
 use tracing;
 use tracing_actix_web::TracingLogger;
 use anyhow::{Result, bail};
-
-pub mod domain;
-pub mod infrastructure;
 
 #[actix_web::main]
 async fn main() -> Result<()>{
@@ -21,6 +23,12 @@ async fn main() -> Result<()>{
         App::new()
             .app_data(app_state.clone())
             .wrap(TracingLogger::default())
+            .service(web::scope("/auth")
+            )
+            .service(web::scope("/api")
+                .wrap(presentation::middleware::Jwt)
+            )
+            
     })
     .bind("127.0.0.1:8080")?
     .run()
