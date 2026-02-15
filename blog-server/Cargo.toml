@@ -9,6 +9,7 @@ actix-web-httpauth = "0.8.2"
 actix-cors = "0.7.1"
 sqlx = {version = "0.8.6", features = ["postgres", "migrate", "macros"]}
 argon2 = "0.5.3"
+tracing-actix-web = "0.7.21"
 tonic = {workspace = true}
 prost = {workspace = true}
 prost-types = {workspace = true}

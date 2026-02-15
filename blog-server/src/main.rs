@@ -1,5 +1,6 @@
 use actix_web::{web, HttpServer, App};
 use tracing;
+use tracing_actix_web::TracingLogger;
 use anyhow::{Result, bail};
 
 pub mod domain;
@@ -19,6 +20,7 @@ async fn main() -> Result<()>{
     HttpServer::new(move || {
         App::new()
             .app_data(app_state.clone())
+            .wrap(TracingLogger::default())
     })
     .bind("127.0.0.1:8080")?
     .run()
