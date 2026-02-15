@@ -14,9 +14,14 @@ pub struct LogConfig {
     pub level: String,
 }
 
+pub struct SecretConfig {
+    pub jwt_secret: String,
+}
+
 pub struct Config {
     pub db_config: DbConfig,
     pub log_config: LogConfig,
+    pub secret_config: SecretConfig,
 }
 
 impl Config {
@@ -33,6 +38,9 @@ impl Config {
             },
             log_config: LogConfig {
                 level: env::var("LOG_LEVEL")?,
+            },
+            secret_config: SecretConfig{
+                jwt_secret: env::var("JWT_SECRET")?,
             }
         })
     }

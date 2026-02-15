@@ -1,0 +1,59 @@
+use serde::{Serialize, Deserialize};
+use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, DecodingKey};
+use chrono::{Utc, TimeDelta};
+use anyhow::{Result, bail};
+
+#[derive(Serialize, Deserialize)]
+pub struct Claims {
+    user_id: i64,
+    username: String,
+    exp: usize,
+}
+
+pub struct JwtService {
+    enc_key: EncodingKey,
+    dec_key: DecodingKey,
+    header: Header,
+    validation: Validation,
+}
+
+impl JwtService {
+    pub fn new(secret: &str) -> Self {
+        let header = Header::new(Algorithm::HS256);
+        let validation = Validation::new(Algorithm::HS256);
+        let enc_key = EncodingKey::from_secret(secret.as_bytes());
+        let dec_key = DecodingKey::from_secret(secret.as_bytes());
+        Self {
+            enc_key,
+            dec_key,
+            header,
+            validation
+        }
+    }
+
+    pub fn generate_token(&self, user_id: i64, username: String) -> Result<String> {
+        let expiration = if let Some(val) = Utc::now().checked_add_signed(TimeDelta::hours(24)){
+            val.timestamp()
+        }else{
+            bail!("Can't generate timestamp of jwt token");
+        };
+        let claims = Claims {
+            user_id,
+            username,
+            exp: expiration as usize,
+        };
+        let token = encode(&self.header, &claims, &self.enc_key)?;
+        Ok(token)
+    }
+
+    pub fn verify_token(&self, token: &str) -> Option<Claims> {
+        match decode::<Claims>(token, &self.dec_key, &self.validation) {
+            Ok(data) => {
+                Some(data.claims)
+            }
+            Err(_) => {
+                None
+            }
+        }
+    }
+}

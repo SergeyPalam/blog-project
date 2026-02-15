@@ -1,9 +1,5 @@
 use sqlx::{postgres::PgPoolOptions, PgPool, migrate};
-use std::env;
-
-use crate::infrastructure::config::DbConfig;
-
-use super::config::Config;
+use super::config::DbConfig;
 
 fn db_url_from_params(db_config: &DbConfig) -> String {
     format!("postgresql://{}:{}@{}:{}/{}",
