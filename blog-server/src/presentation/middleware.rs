@@ -1,17 +1,19 @@
-use actix_web::{Error, HttpMessage, HttpResponse, HttpResponseBuilder, dev::{Service, ServiceRequest, ServiceResponse, Transform}, http::StatusCode, web};
+use actix_web::{Error, HttpMessage, dev::{Service, ServiceRequest, ServiceResponse, Transform}, web};
 use actix_web::http::header;
 use std::future::{ready, Ready, Future};
 use std::{pin::Pin, task::{Context, Poll}};
 
 use crate::infrastructure::AppState;
+use crate::domain::error;
 
 pub struct Jwt;
 
-impl<S> Transform<S, ServiceRequest> for Jwt
+impl<S, B> Transform<S, ServiceRequest> for Jwt
 where
-    S: Service<ServiceRequest, Response = ServiceResponse, Error = Error> + 'static
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+    B: 'static
 {
-    type Response = ServiceResponse;
+    type Response = ServiceResponse<B>;
     type Error = Error;
     type InitError = ();
     type Transform = JwtAuth<S>;
@@ -23,11 +25,12 @@ where
 }
 pub struct JwtAuth<S> { service: S }
 
-impl<S> Service<ServiceRequest> for JwtAuth<S>
+impl<S, B> Service<ServiceRequest> for JwtAuth<S>
 where
-    S: Service<ServiceRequest, Response = ServiceResponse, Error = Error> + 'static
+    S: Service<ServiceRequest, Response = ServiceResponse<B>, Error = Error> + 'static,
+    B: 'static
 {
-    type Response = ServiceResponse;
+    type Response = ServiceResponse<B>;
     type Error = Error;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>>>>;
 
@@ -36,14 +39,6 @@ where
     }
 
     fn call(&self, req: ServiceRequest) -> Self::Future {
-        let return_err = |req: ServiceRequest, mut builder: HttpResponseBuilder, err_msg| {
-            let response = builder
-                .json(serde_json::json!({"error": err_msg}));
-
-            let service_resp = ServiceResponse::new(req.into_parts().0, response);
-            return Box::pin(async move { Ok(service_resp)});
-        };
-
         let token = req.headers()
             .get(header::AUTHORIZATION)
             .and_then(|h| h.to_str().ok())
@@ -51,17 +46,17 @@ where
             .map(str::to_owned);
 
         let Some(token) = token else {
-            return return_err(req, HttpResponse::Unauthorized(), "missing bearer");
+            return Box::pin(async move { Err(error::AppError::Unauthorized("missing bearer".to_string()).into())});
         };
 
         let jwt_service = if let Some(data) = req.app_data::<web::Data<AppState>>(){
             data.jwt_service.clone()
         }else{
-            return return_err(req, HttpResponse::InternalServerError(), "Internal server error");
+            return Box::pin(async move { Err(error::AppError::InternalError(String::new()).into())});
         };
 
         let Some(claims) = jwt_service.verify_token(&token) else{
-            return return_err(req, HttpResponse::Unauthorized(), "invalid credentials");
+            return Box::pin(async move { Err(error::AppError::Unauthorized("invalid credentials".to_string()).into())});
         };
 
         req.extensions_mut().insert(serde_json::to_string(&claims));
