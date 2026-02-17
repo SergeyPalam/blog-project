@@ -2,14 +2,13 @@ use chrono::{DateTime, Utc};
 use std::fmt::Display;
 use derive_more::Debug;
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct User {
-    id: i64,
-    username: String,
-    email: String,
+    pub username: String,
+    pub email: String,
     #[debug(skip)]
-    password_hash: String,
-    created_at: DateTime<Utc>,
+    pub password_hash: String,
+    pub created_at: DateTime<Utc>,
 }
 
 impl Display for User {

@@ -1,13 +1,13 @@
 use serde::{Serialize, Deserialize};
 use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, DecodingKey};
 use chrono::{Utc, TimeDelta};
-use anyhow::{Result, bail};
+use tracing::{error};
 
 use super::config::SecretConfig;
+use crate::domain::error::AppError;
 
 #[derive(Serialize, Deserialize)]
 pub struct Claims {
-    user_id: i64,
     username: String,
     exp: usize,
 }
@@ -33,18 +33,23 @@ impl JwtService {
         }
     }
 
-    pub fn generate_token(&self, user_id: i64, username: String) -> Result<String> {
+    pub fn generate_token(&self, username: &str) -> Result<String, AppError> {
         let expiration = if let Some(val) = Utc::now().checked_add_signed(TimeDelta::hours(24)){
             val.timestamp()
         }else{
-            bail!("Can't generate timestamp of jwt token");
+            return Err(AppError::InternalError("Can't generate timestamp of jwt token".to_string()));
         };
         let claims = Claims {
-            user_id,
-            username,
+            username: username.to_string(),
             exp: expiration as usize,
         };
-        let token = encode(&self.header, &claims, &self.enc_key)?;
+        let token = match encode(&self.header, &claims, &self.enc_key){
+            Ok(val) => val,
+            Err(e) => {
+                error!("{e}");
+                return Err(AppError::InternalError("Can't create jwt token".to_string()));
+            }
+        };
         Ok(token)
     }
 

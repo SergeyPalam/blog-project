@@ -12,6 +12,7 @@ pub enum AppError {
     #[error("Post not found: {0}")]
     PostNotFound(String),
     #[error("Internal server error: {0}")]
+    
     InternalError(String),
 }
 

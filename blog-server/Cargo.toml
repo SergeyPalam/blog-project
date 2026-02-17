@@ -7,7 +7,7 @@ edition = "2024"
 actix-web = "4.12.1"
 actix-web-httpauth = "0.8.2"
 actix-cors = "0.7.1"
-sqlx = {version = "0.8.6", features = ["postgres", "migrate", "macros"]}
+sqlx = {version = "0.8.6", features = ["postgres", "migrate", "macros", "runtime-tokio", "chrono"]}
 argon2 = "0.5.3"
 tracing-actix-web = "0.7.21"
 jsonwebtoken = "10.3.0"

@@ -1,23 +1,19 @@
-use actix_web::{web, App, HttpServer, HttpResponse, Result};
-use serde::{Deserialize, Serialize};
+use actix_web::{web, App, HttpServer, HttpResponse, Result, http::StatusCode};
 
 use crate::infrastructure::AppState;
+use crate::application::auth_service::*;
+use crate::domain::error::AppError;
 
-#[derive(Deserialize)]
-struct RegisterUserReq {
-    username: String,
-    email: String,
-    password: String,
+pub async fn register(new_user: web::Json<RegisterUserReq>, app_state: web::Data<AppState>) -> Result<HttpResponse, AppError> {
+    let req = new_user.into_inner();
+    let auth_service = app_state.auth_service.clone();
+    let resp_data = auth_service.register(req).await?;
+    Ok(HttpResponse::Ok().status(StatusCode::CREATED).json(resp_data))
 }
 
-#[derive(Serialize)]
-struct RegisteredUser {
-    id: i64,
-    name: String,
-    email: String,
-    token: String,
-}
-
-async fn register(new_user: web::Json<RegisterUserReq>, app_state: web::Data<AppState>) -> Result<HttpResponse> {
-    Ok(HttpResponse::Ok().body("Hello, World!"))
+pub async fn login(user: web::Json<LoginUserReq>, app_state: web::Data<AppState>) -> Result<HttpResponse, AppError> {
+    let req = user.into_inner();
+    let auth_service = app_state.auth_service.clone();
+    let resp_data = auth_service.login(req).await?;
+    Ok(HttpResponse::Ok().status(StatusCode::CREATED).json(resp_data))
 }
