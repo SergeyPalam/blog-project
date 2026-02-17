@@ -59,7 +59,7 @@ where
             return Box::pin(async move { Err(error::AppError::Unauthorized("invalid credentials".to_string()).into())});
         };
 
-        req.extensions_mut().insert(serde_json::to_string(&claims));
+        req.extensions_mut().insert(claims);
 
         let handler_service = self.service.call(req);
 

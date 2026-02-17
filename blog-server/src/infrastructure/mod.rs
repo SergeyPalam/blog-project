@@ -2,6 +2,7 @@ pub mod database;
 pub mod jwt;
 pub mod logging;
 pub mod config;
+pub mod hash;
 
 use anyhow::Result;
 use dotenv::dotenv;
@@ -34,7 +35,7 @@ pub async fn init() -> Result<AppState> {
     let post_repo = Arc::new(PostRepository::new(db_pool.clone()));
     let user_repo = Arc::new(UserRepository::new(db_pool.clone()));
     let auth_service = Arc::new(AuthService::new(jwt_service.clone(), user_repo.clone()));
-    let blog_service = Arc::new(BlogService::new(user_repo.clone(), post_repo.clone()));
+    let blog_service = Arc::new(BlogService::new(post_repo.clone()));
     Ok(AppState{
         config,
         jwt_service,

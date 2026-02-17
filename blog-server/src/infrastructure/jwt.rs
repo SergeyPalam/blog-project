@@ -8,9 +8,9 @@ use crate::domain::error::AppError;
 
 #[derive(Serialize, Deserialize)]
 pub struct Claims {
-    username: String,
-    email: String,
-    id: i64,
+    pub username: String,
+    pub email: String,
+    pub id: i64,
     exp: usize,
 }
 
