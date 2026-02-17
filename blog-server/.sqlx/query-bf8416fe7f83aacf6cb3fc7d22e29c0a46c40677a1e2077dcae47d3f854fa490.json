@@ -1,25 +1,30 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n             SELECT username, email, password_hash, created_at from users where username = $1\n            ",
+  "query": "\n             SELECT * from users where username = $1\n            ",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
         "name": "username",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 1,
+        "ordinal": 2,
         "name": "email",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 2,
+        "ordinal": 3,
         "name": "password_hash",
         "type_info": "Varchar"
       },
       {
-        "ordinal": 3,
+        "ordinal": 4,
         "name": "created_at",
         "type_info": "Timestamptz"
       }
@@ -33,8 +38,9 @@
       false,
       false,
       false,
+      false,
       false
     ]
   },
-  "hash": "eb238125465af1b8d8639f0959bcbb5a59b3ec7fc85c64ea4cf65bf3c52ae350"
+  "hash": "bf8416fe7f83aacf6cb3fc7d22e29c0a46c40677a1e2077dcae47d3f854fa490"
 }

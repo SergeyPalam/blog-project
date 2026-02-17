@@ -15,5 +15,5 @@ pub async fn login(user: web::Json<LoginUserReq>, app_state: web::Data<AppState>
     let req = user.into_inner();
     let auth_service = app_state.auth_service.clone();
     let resp_data = auth_service.login(req).await?;
-    Ok(HttpResponse::Ok().status(StatusCode::CREATED).json(resp_data))
+    Ok(HttpResponse::Ok().status(StatusCode::OK).json(resp_data))
 }

@@ -1,7 +1,19 @@
+
+use serde::{Serialize, Deserialize};
+
+use std::sync::Arc;
+
 use crate::domain::error::AppError;
 use crate::data::{post_repository::PostRepository, user_repository::UserRepository};
 
-use std::sync::Arc;
+
+
+#[derive(Deserialize)]
+pub struct CreatePostReq {
+    title: String,
+    content: String,
+    token: String,
+}
 
 pub struct BlogService {
     user_repo: Arc<UserRepository>,

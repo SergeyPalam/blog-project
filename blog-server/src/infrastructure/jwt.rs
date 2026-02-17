@@ -9,6 +9,8 @@ use crate::domain::error::AppError;
 #[derive(Serialize, Deserialize)]
 pub struct Claims {
     username: String,
+    email: String,
+    id: i64,
     exp: usize,
 }
 
@@ -33,7 +35,7 @@ impl JwtService {
         }
     }
 
-    pub fn generate_token(&self, username: &str) -> Result<String, AppError> {
+    pub fn generate_token(&self, username: &str, email: &str, user_id: i64) -> Result<String, AppError> {
         let expiration = if let Some(val) = Utc::now().checked_add_signed(TimeDelta::hours(24)){
             val.timestamp()
         }else{
@@ -41,6 +43,8 @@ impl JwtService {
         };
         let claims = Claims {
             username: username.to_string(),
+            email: email.to_string(),
+            id: user_id,
             exp: expiration as usize,
         };
         let token = match encode(&self.header, &claims, &self.enc_key){

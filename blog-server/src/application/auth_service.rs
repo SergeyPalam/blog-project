@@ -21,8 +21,6 @@ pub struct RegisterUserReq {
 
 #[derive(Serialize, Default)]
 pub struct RegisteredUser {
-    pub name: String,
-    pub email: String,
     pub token: String,
 }
 
@@ -51,14 +49,10 @@ impl AuthService {
         new_user.password_hash = Self::hash_password(&reg_req.password)?;
         new_user.created_at = Utc::now();
 
-        let new_token = self.jwt_service.generate_token(&new_user.username)?;
-        self.user_repo.add_new_user(&new_user).await?;
-        let mut res = RegisteredUser::default();
-        res.name = new_user.username;
-        res.email = new_user.email;
-        res.token = new_token;
-
-        Ok(res)
+        let id = self.user_repo.add_new_user(&new_user).await?;
+        let new_token = self.jwt_service.generate_token(&new_user.username, &new_user.email, id)?;
+        
+        Ok(RegisteredUser{token: new_token})
     }
 
     pub async fn login(&self, log_req: LoginUserReq) -> Result<RegisteredUser, AppError> {
@@ -71,13 +65,8 @@ impl AuthService {
             return Err(AppError::Unauthorized(user_name.to_string()));
         }
 
-        let new_token = self.jwt_service.generate_token(&user.username)?;
-        let mut res = RegisteredUser::default();
-        res.name = user.username;
-        res.email = user.email;
-        res.token = new_token;
-
-        Ok(res)
+        let new_token = self.jwt_service.generate_token(&user.username, &user.email, user.id)?;
+        Ok(RegisteredUser{token: new_token})
     }
 
     fn hash_password(password: &str) -> Result<String, AppError> {
