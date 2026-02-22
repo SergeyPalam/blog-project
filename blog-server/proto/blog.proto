@@ -3,13 +3,19 @@ syntax = "proto3";
 package proto;
 
 service BlogService {
-    rpc Register(RegisterRequest) returns (AuthResponse);
-    rpc Login(LoginRequest) returns (AuthResponse);
-    rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
-    rpc GetPost(GetPostRequest) returns (PostResponse);
+    rpc Register(RegisterRequest) returns (String);
+    rpc Login(LoginRequest) returns (String);
+    rpc CreatePost(CreatePostRequest) returns (String);
+    rpc GetPost(GetPostRequest) returns (String);
     rpc UpdatePost(UpdatePostRequest) returns (UpdatePostResponse);
     rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
     rpc ListPosts(ListPostsRequest) returns (ListPostsResponse);
+}
+
+message AuthUser {
+    String username = 1;
+    String email = 2;
+    int64 id = 3;
 }
 
 message RegisterRequest {
@@ -23,30 +29,20 @@ message LoginRequest {
     String password = 2;
 }
 
-message AuthResponse {
-
-}
-
 message CreatePostRequest {
-    String title = 1;
-    String content = 2;
-}
-
-message CreatePostResponse {
-
+    AuthUser auth_user = 1;
+    String title = 2;
+    String content = 3;
 }
 
 message GetPostRequest {
-
-}
-
-message PostResponse {
-
+    int64 post_id = 1;
 }
 
 message UpdatePostRequest {
-    String title = 1;
-    String content = 2;
+    AuthUser auth_user = 1;
+    String title = 2;
+    String content = 3;
 }
 
 message UpdatePostResponse {

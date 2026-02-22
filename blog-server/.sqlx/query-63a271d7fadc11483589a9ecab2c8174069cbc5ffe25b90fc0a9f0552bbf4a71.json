@@ -1,0 +1,14 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n             DELETE FROM posts\n             WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "63a271d7fadc11483589a9ecab2c8174069cbc5ffe25b90fc0a9f0552bbf4a71"
+}

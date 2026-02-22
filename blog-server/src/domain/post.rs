@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+
 pub struct Post {
     pub id: i64,
     pub title: String,
@@ -9,15 +10,21 @@ pub struct Post {
 }
 
 impl Post {
-    pub fn new(title: String, content: String, author_id: i64) -> Self {
+    pub fn create(id: i64, title: String, content: String, author_id: i64) -> Self {
         let current = Utc::now();
         Self {
-            id: 0,
+            id,
             title,
             content,
             author_id,
-            created_at: current.clone(),
+            created_at: current,
             updated_at: current
         }
+    }
+
+    pub fn update(&mut self, new_title: String, new_content: String) {
+        self.title = new_title;
+        self.content = new_content;
+        self.updated_at = Utc::now();
     }
 }

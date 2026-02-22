@@ -1,0 +1,17 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n             UPDATE posts\n             SET title = $1, content = $2, updated_at = $3\n             WHERE id = $4\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Varchar",
+        "Text",
+        "Timestamptz",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "921e3d1e5e19e7a4dfb01e335abb0762eb2e156aa7d2b70f31c353df85364fbc"
+}

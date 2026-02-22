@@ -1,8 +1,14 @@
+use tracing::{error, info};
+
 use chrono::{DateTime, Utc};
 use std::fmt::Display;
 use derive_more::Debug;
 
-#[derive(Debug, Default)]
+use crate::infrastructure::hash::hash_password;
+use super::error::AppError;
+
+
+#[derive(Debug)]
 pub struct User {
     pub id: i64,
     pub username: String,
@@ -10,6 +16,43 @@ pub struct User {
     #[debug(skip)]
     pub password_hash: String,
     pub created_at: DateTime<Utc>,
+}
+
+impl User {
+    pub fn create(id: i64, username: String, email: String, password: String) -> Result<Self, AppError> {
+        let password_hash = match hash_password(&password){
+            Ok(val) => val,
+            Err(e) => {
+                error!("{e}");
+                return Err(AppError::InternalError("Can't hash password".to_string()));
+            }
+        };
+
+        Ok(Self{
+            id,
+            username,
+            email,
+            password_hash,
+            created_at: Utc::now(),
+        })
+    }
+
+    pub fn verify_user(&self, password: &str) -> Result<(), AppError> {
+        let password_hash = match hash_password(password){
+            Ok(val) => val,
+            Err(e) => {
+                error!("{e}");
+                return Err(AppError::InternalError("Can't hash password".to_string()));
+            }
+        };
+
+        if self.password_hash != password_hash {
+            info!("Attempt to log with wrong credentials: {}", self.username);
+            return Err(AppError::Unauthorized(self.username.to_owned()));
+        }
+
+        Ok(())
+    }
 }
 
 impl Display for User {
