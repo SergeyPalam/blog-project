@@ -43,15 +43,20 @@ pub struct NewPost {
 }
 
 #[derive(Deserialize)]
-pub struct PaginationQuery {
+pub struct PostId {
+    id: i64,
+}
+
+#[derive(Deserialize)]
+pub struct GetPostsReq {
     pub offset: Option<i64>,
     pub limit: Option<i64>,
 }
 
 #[derive(Serialize)]
 pub struct PostInfo {
-    pub content: String,
     pub title: String,
+    pub content: String,
     pub author_id: i64,
     pub created_at: String,
     pub updated_at: String,
@@ -95,32 +100,32 @@ impl BlogService {
         Ok(PostInfo::from(post))
     }
 
-    pub async fn get_post(&self, post_id: i64) -> Result<PostInfo, AppError>{
-        let post = self.post_repo.get_post(post_id).await?;
+    pub async fn get_post(&self, post_id: PostId) -> Result<PostInfo, AppError>{
+        let post = self.post_repo.get_post(post_id.id).await?;
         Ok(PostInfo::from(post))
     }
 
-    pub async fn update_post(&self, auth_user: AuthUser, post_id: i64, new_post: NewPost) -> Result<PostInfo, AppError>{
-        let author_id = self.post_repo.get_post_author_id(post_id).await?;
+    pub async fn update_post(&self, auth_user: AuthUser, post_id: PostId, new_post: NewPost) -> Result<PostInfo, AppError>{
+        let author_id = self.post_repo.get_post_author_id(post_id.id).await?;
         if author_id != auth_user.id {
-            warn!("Attempt to update post: {post_id} by user: {:?}", auth_user);
+            warn!("Attempt to update post: {} by user: {:?}", post_id.id, auth_user);
             return Err(AppError::Unauthorized("No permission for update".to_string()));
         }
 
-        let post = self.post_repo.update_post(post_id, new_post.title, new_post.content).await?;
+        let post = self.post_repo.update_post(post_id.id, new_post.title, new_post.content).await?;
         Ok(PostInfo::from(post))
     }
 
-    pub async fn delete_post(&self, auth_user: AuthUser, post_id: i64) -> Result<(), AppError>{
-        let author_id = self.post_repo.get_post_author_id(post_id).await?;
+    pub async fn delete_post(&self, auth_user: AuthUser, post_id: PostId) -> Result<(), AppError>{
+        let author_id = self.post_repo.get_post_author_id(post_id.id).await?;
         if author_id != auth_user.id {
-            warn!("Attempt to delete post: {post_id} by user: {:?}", auth_user);
+            warn!("Attempt to delete post: {} by user: {:?}", post_id.id, auth_user);
             return Err(AppError::Unauthorized("No permission for delete".to_string()));
         }
-        self.post_repo.delete_post(post_id).await
+        self.post_repo.delete_post(post_id.id).await
     }
 
-    pub async fn get_posts(&self, query: PaginationQuery) -> Result<PostResp, AppError>{
+    pub async fn get_posts(&self, query: GetPostsReq) -> Result<PostResp, AppError>{
         let offset = query.offset.unwrap_or(0);
         let limit = query.limit.unwrap_or(10);
         

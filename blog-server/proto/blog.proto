@@ -3,13 +3,13 @@ syntax = "proto3";
 package proto;
 
 service BlogService {
-    rpc Register(RegisterRequest) returns (String);
-    rpc Login(LoginRequest) returns (String);
-    rpc CreatePost(CreatePostRequest) returns (String);
-    rpc GetPost(GetPostRequest) returns (String);
-    rpc UpdatePost(UpdatePostRequest) returns (UpdatePostResponse);
+    rpc Register(RegisterRequest) returns (RegisteredUser);
+    rpc Login(LoginRequest) returns (RegisteredUser);
+    rpc CreatePost(CreatePostRequest) returns (PostInfo);
+    rpc GetPost(PostId) returns (PostInfo);
+    rpc UpdatePost(UpdatePostRequest) returns (PostInfo);
     rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
-    rpc ListPosts(ListPostsRequest) returns (ListPostsResponse);
+    rpc GetPosts(GetPostsReq) returns (GetPostsResponse);
 }
 
 message AuthUser {
@@ -18,10 +18,19 @@ message AuthUser {
     int64 id = 3;
 }
 
+message NewPost {
+    String title = 1;
+    String content = 2;
+}
+
 message RegisterRequest {
     String username = 1;
-    String password = 2;
-    String email = 3;
+    String email = 2;
+    String password = 3;
+}
+
+message RegisteredUser {
+    String token = 1;
 }
 
 message LoginRequest {
@@ -29,38 +38,43 @@ message LoginRequest {
     String password = 2;
 }
 
-message CreatePostRequest {
-    AuthUser auth_user = 1;
-    String title = 2;
-    String content = 3;
+message PostId {
+    int64 id = 1;
 }
 
-message GetPostRequest {
-    int64 post_id = 1;
+message PostInfo {
+    String title = 1;
+    String content = 2;
+    int64 author_id = 3;
+    String created_at = 4;
+    String updated_at = 5;
+}
+
+message CreatePostRequest {
+    AuthUser auth_user = 1;
+    NewPost new_post = 2;
 }
 
 message UpdatePostRequest {
     AuthUser auth_user = 1;
-    String title = 2;
-    String content = 3;
-}
-
-message UpdatePostResponse {
-
+    NewPost new_post = 2;
+    PostId post_id = 3;
 }
 
 message DeletePostRequest {
-
+    AuthUser auth_user = 1;
+    PostId post_id = 2;
 }
 
-message DeletePostResponse {
-    int64 id = 1;
+message DeletePostResponse {}
+
+message GetPostsReq {
+    int64 offset = 1 [default = 0];
+    int64 limit = 2 [default = 10];
 }
 
-message ListPostsRequest {
-
-}
-
-message ListPostsResponse {
-
+message GetPostsResponse {
+    int64 offset = 1;
+    int64 limit = 2;
+    repeated PostInfo = 3;
 }
