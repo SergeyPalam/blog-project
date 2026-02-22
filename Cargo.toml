@@ -11,6 +11,7 @@ resolver = "2"
 tonic = "0.14.3"
 prost = "0.14.3"
 prost-types = "0.14.3"
+tonic-prost = "0.14.3"
 tonic-prost-build = "0.14.3"
 dotenv = "0.15.0"
 serde = "1.0.228"
@@ -21,3 +22,4 @@ thiserror = "2.0.18"
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.22", features = ["env-filter", "json", "chrono"] }
 derive_more = {version = "2.1.1", features = ["debug"]}
+tokio = "1.49.0"

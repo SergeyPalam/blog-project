@@ -1,23 +1,21 @@
-
 use actix_web::HttpMessage;
-use serde::{Serialize, Deserialize};
-use chrono::{DateTime, Utc};
 use actix_web::{FromRequest, HttpRequest, dev::Payload};
+use serde::{Deserialize, Serialize};
 
+use std::future::{Ready, ready};
 use std::sync::Arc;
-use std::future::{ready, Ready};
 
+use crate::data::post_repository::PostRepository;
 use crate::domain::error::AppError;
 use crate::domain::post::Post;
-use crate::data::{post_repository::PostRepository};
-use crate::infrastructure::jwt::{JwtService, Claims};
+use crate::infrastructure::jwt::Claims;
 use tracing::warn;
 
 #[derive(Default, Debug)]
 pub struct AuthUser {
-    username: String,
-    email: String,
-    id: i64,
+    pub username: String,
+    pub email: String,
+    pub id: i64,
 }
 
 impl FromRequest for AuthUser {
@@ -36,24 +34,24 @@ impl FromRequest for AuthUser {
     }
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct NewPost {
-    title: String,
-    content: String,
+    pub title: String,
+    pub content: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct PostId {
-    id: i64,
+    pub id: i64,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct GetPostsReq {
     pub offset: Option<i64>,
     pub limit: Option<i64>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Default)]
 pub struct PostInfo {
     pub title: String,
     pub content: String,
@@ -64,7 +62,7 @@ pub struct PostInfo {
 
 impl From<Post> for PostInfo {
     fn from(post: Post) -> Self {
-        Self{
+        Self {
             content: post.content,
             title: post.title,
             author_id: post.author_id,
@@ -74,11 +72,11 @@ impl From<Post> for PostInfo {
     }
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Default)]
 pub struct PostResp {
-    offset: i64,
-    limit: i64,
-    posts: Vec<PostInfo>, 
+    pub offset: i64,
+    pub limit: i64,
+    pub posts: Vec<PostInfo>,
 }
 
 pub struct BlogService {
@@ -86,13 +84,15 @@ pub struct BlogService {
 }
 
 impl BlogService {
-    pub fn new(post_repo: Arc<PostRepository>) -> Self{
-        BlogService{
-            post_repo,
-        }
+    pub fn new(post_repo: Arc<PostRepository>) -> Self {
+        BlogService { post_repo }
     }
 
-    pub async fn create_post(&self, auth_user: AuthUser, new_post: NewPost) -> Result<PostInfo, AppError>{
+    pub async fn create_post(
+        &self,
+        auth_user: AuthUser,
+        new_post: NewPost,
+    ) -> Result<PostInfo, AppError> {
         let post_id = self.post_repo.next_post_id().await?;
         let post = Post::create(post_id, new_post.title, new_post.content, auth_user.id);
 
@@ -100,41 +100,58 @@ impl BlogService {
         Ok(PostInfo::from(post))
     }
 
-    pub async fn get_post(&self, post_id: PostId) -> Result<PostInfo, AppError>{
+    pub async fn get_post(&self, post_id: PostId) -> Result<PostInfo, AppError> {
         let post = self.post_repo.get_post(post_id.id).await?;
         Ok(PostInfo::from(post))
     }
 
-    pub async fn update_post(&self, auth_user: AuthUser, post_id: PostId, new_post: NewPost) -> Result<PostInfo, AppError>{
+    pub async fn update_post(
+        &self,
+        auth_user: AuthUser,
+        post_id: PostId,
+        new_post: NewPost,
+    ) -> Result<PostInfo, AppError> {
         let author_id = self.post_repo.get_post_author_id(post_id.id).await?;
         if author_id != auth_user.id {
-            warn!("Attempt to update post: {} by user: {:?}", post_id.id, auth_user);
-            return Err(AppError::Unauthorized("No permission for update".to_string()));
+            warn!(
+                "Attempt to update post: {} by user: {:?}",
+                post_id.id, auth_user
+            );
+            return Err(AppError::Unauthorized(
+                "No permission for update".to_string(),
+            ));
         }
 
-        let post = self.post_repo.update_post(post_id.id, new_post.title, new_post.content).await?;
+        let post = self
+            .post_repo
+            .update_post(post_id.id, new_post.title, new_post.content)
+            .await?;
         Ok(PostInfo::from(post))
     }
 
-    pub async fn delete_post(&self, auth_user: AuthUser, post_id: PostId) -> Result<(), AppError>{
+    pub async fn delete_post(&self, auth_user: AuthUser, post_id: PostId) -> Result<(), AppError> {
         let author_id = self.post_repo.get_post_author_id(post_id.id).await?;
         if author_id != auth_user.id {
-            warn!("Attempt to delete post: {} by user: {:?}", post_id.id, auth_user);
-            return Err(AppError::Unauthorized("No permission for delete".to_string()));
+            warn!(
+                "Attempt to delete post: {} by user: {:?}",
+                post_id.id, auth_user
+            );
+            return Err(AppError::Unauthorized(
+                "No permission for delete".to_string(),
+            ));
         }
         self.post_repo.delete_post(post_id.id).await
     }
 
-    pub async fn get_posts(&self, query: GetPostsReq) -> Result<PostResp, AppError>{
+    pub async fn get_posts(&self, query: GetPostsReq) -> Result<PostResp, AppError> {
         let offset = query.offset.unwrap_or(0);
         let limit = query.limit.unwrap_or(10);
-        
-        let posts = self.post_repo.get_posts(offset, limit).await?;
-        let posts_info: Vec<PostInfo> = posts.into_iter().map(|post|{
-            PostInfo::from(post)
-        }).collect();
 
-        Ok(PostResp{
+        let posts = self.post_repo.get_posts(offset, limit).await?;
+        let posts_info: Vec<PostInfo> =
+            posts.into_iter().map(|post| PostInfo::from(post)).collect();
+
+        Ok(PostResp {
             offset,
             limit,
             posts: posts_info,

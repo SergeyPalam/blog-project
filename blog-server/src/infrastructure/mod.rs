@@ -1,20 +1,20 @@
+pub mod config;
 pub mod database;
+pub mod hash;
 pub mod jwt;
 pub mod logging;
-pub mod config;
-pub mod hash;
 
 use anyhow::Result;
 use dotenv::dotenv;
 
 use std::sync::Arc;
 
-use config::Config;
-use database::{create_pool, run_migrations};
-use logging::init_logging;
-use jwt::JwtService;
 use super::application::{auth_service::AuthService, blog_service::BlogService};
 use super::data::{post_repository::PostRepository, user_repository::UserRepository};
+use config::Config;
+use database::{create_pool, run_migrations};
+use jwt::JwtService;
+use logging::init_logging;
 pub struct AppState {
     pub config: Config,
     pub jwt_service: Arc<JwtService>,
@@ -36,7 +36,7 @@ pub async fn init() -> Result<AppState> {
     let user_repo = Arc::new(UserRepository::new(db_pool.clone()));
     let auth_service = Arc::new(AuthService::new(jwt_service.clone(), user_repo.clone()));
     let blog_service = Arc::new(BlogService::new(post_repo.clone()));
-    Ok(AppState{
+    Ok(AppState {
         config,
         jwt_service,
         auth_service,

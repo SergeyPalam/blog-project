@@ -39,9 +39,9 @@ impl Config {
             log_config: LogConfig {
                 level: env::var("LOG_LEVEL")?,
             },
-            secret_config: SecretConfig{
+            secret_config: SecretConfig {
                 jwt_secret: env::var("JWT_SECRET")?,
-            }
+            },
         })
     }
 }

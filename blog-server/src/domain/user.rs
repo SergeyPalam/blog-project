@@ -1,12 +1,11 @@
 use tracing::{error, info};
 
 use chrono::{DateTime, Utc};
-use std::fmt::Display;
 use derive_more::Debug;
+use std::fmt::Display;
 
-use crate::infrastructure::hash::hash_password;
 use super::error::AppError;
-
+use crate::infrastructure::hash::hash_password;
 
 #[derive(Debug)]
 pub struct User {
@@ -19,8 +18,13 @@ pub struct User {
 }
 
 impl User {
-    pub fn create(id: i64, username: String, email: String, password: String) -> Result<Self, AppError> {
-        let password_hash = match hash_password(&password){
+    pub fn create(
+        id: i64,
+        username: String,
+        email: String,
+        password: String,
+    ) -> Result<Self, AppError> {
+        let password_hash = match hash_password(&password) {
             Ok(val) => val,
             Err(e) => {
                 error!("{e}");
@@ -28,7 +32,7 @@ impl User {
             }
         };
 
-        Ok(Self{
+        Ok(Self {
             id,
             username,
             email,
@@ -38,7 +42,7 @@ impl User {
     }
 
     pub fn verify_user(&self, password: &str) -> Result<(), AppError> {
-        let password_hash = match hash_password(password){
+        let password_hash = match hash_password(password) {
             Ok(val) => val,
             Err(e) => {
                 error!("{e}");

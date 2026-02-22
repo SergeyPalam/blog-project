@@ -18,7 +18,7 @@ impl Post {
             content,
             author_id,
             created_at: current,
-            updated_at: current
+            updated_at: current,
         }
     }
 

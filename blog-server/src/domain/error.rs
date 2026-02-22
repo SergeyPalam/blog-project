@@ -1,4 +1,4 @@
-use actix_web::{App, HttpResponse, error::ResponseError, http::StatusCode};
+use actix_web::{HttpResponse, error::ResponseError, http::StatusCode};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -12,28 +12,17 @@ pub enum AppError {
     #[error("Post not found: {0}")]
     PostNotFound(String),
     #[error("Internal server error: {0}")]
-    
     InternalError(String),
 }
 
 impl ResponseError for AppError {
     fn error_response(&self) -> HttpResponse {
         let status = match self {
-            AppError::AlreadyExists(_) => {
-                StatusCode::CONFLICT
-            }
-            AppError::Unauthorized(_) => {
-                StatusCode::UNAUTHORIZED
-            }
-            AppError::UserNotFound(_) => {
-                StatusCode::NOT_FOUND
-            }
-            AppError::PostNotFound(_) => {
-                StatusCode::NOT_FOUND
-            }
-            AppError::InternalError(_) => {
-                StatusCode::INTERNAL_SERVER_ERROR
-            }
+            AppError::AlreadyExists(_) => StatusCode::CONFLICT,
+            AppError::Unauthorized(_) => StatusCode::UNAUTHORIZED,
+            AppError::UserNotFound(_) => StatusCode::NOT_FOUND,
+            AppError::PostNotFound(_) => StatusCode::NOT_FOUND,
+            AppError::InternalError(_) => StatusCode::INTERNAL_SERVER_ERROR,
         };
 
         HttpResponse::build(status).json(serde_json::json!({

@@ -1,30 +1,26 @@
-
-use actix_web::HttpMessage;
 use serde::{Deserialize, Serialize};
-use tracing::{info, error};
-use chrono::Utc;
 
 use std::sync::Arc;
 
-use crate::infrastructure::jwt::{JwtService};
 use crate::data::user_repository::UserRepository;
 use crate::domain::error::AppError;
 use crate::domain::user::User;
+use crate::infrastructure::jwt::JwtService;
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct RegisterUserReq {
     pub username: String,
     pub email: String,
     pub password: String,
 }
 
-#[derive(Deserialize)]
+#[derive(Deserialize, Default)]
 pub struct LoginUserReq {
     pub username: String,
     pub password: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Default)]
 pub struct RegisteredUser {
     pub token: String,
 }
@@ -36,10 +32,10 @@ pub struct AuthService {
 
 impl AuthService {
     fn build_reg_user(&self, user: User) -> Result<RegisteredUser, AppError> {
-        let new_token = self.jwt_service.generate_token(&user.username, &user.email, user.id)?;
-        Ok(RegisteredUser{
-            token: new_token,
-        })
+        let new_token = self
+            .jwt_service
+            .generate_token(&user.username, &user.email, user.id)?;
+        Ok(RegisteredUser { token: new_token })
     }
     pub fn new(jwt_service: Arc<JwtService>, user_repo: Arc<UserRepository>) -> Self {
         Self {
@@ -47,7 +43,7 @@ impl AuthService {
             user_repo,
         }
     }
-    pub async fn register(&self, reg_req: RegisterUserReq) -> Result<RegisteredUser, AppError>{
+    pub async fn register(&self, reg_req: RegisterUserReq) -> Result<RegisteredUser, AppError> {
         let user_id = self.user_repo.next_user_id().await?;
         let new_user = User::create(user_id, reg_req.username, reg_req.email, reg_req.password)?;
 

@@ -12,6 +12,7 @@ argon2 = "0.5.3"
 tracing-actix-web = "0.7.21"
 jsonwebtoken = "10.3.0"
 tonic = {workspace = true}
+tonic-prost = {workspace = true}
 prost = {workspace = true}
 prost-types = {workspace = true}
 dotenv = {workspace = true}
@@ -23,6 +24,7 @@ anyhow = {workspace = true}
 tracing = {workspace = true}
 tracing-subscriber = {workspace = true}
 derive_more = {workspace = true}
+tokio = {workspace = true}
 
 [build-dependencies]
 tonic-prost-build = {workspace = true}

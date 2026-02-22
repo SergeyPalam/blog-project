@@ -1,9 +1,11 @@
-use sqlx::{postgres::PgPoolOptions, PgPool, migrate};
 use super::config::DbConfig;
+use sqlx::{PgPool, migrate, postgres::PgPoolOptions};
 
 fn db_url_from_params(db_config: &DbConfig) -> String {
-    format!("postgresql://{}:{}@{}:{}/{}",
-        db_config.user, db_config.pass, db_config.host, db_config.port, db_config.name)
+    format!(
+        "postgresql://{}:{}@{}:{}/{}",
+        db_config.user, db_config.pass, db_config.host, db_config.port, db_config.name
+    )
 }
 
 pub async fn create_pool(db_config: &DbConfig) -> Result<PgPool, sqlx::Error> {

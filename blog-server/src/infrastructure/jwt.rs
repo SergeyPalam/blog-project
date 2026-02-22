@@ -1,7 +1,7 @@
-use serde::{Serialize, Deserialize};
-use jsonwebtoken::{encode, decode, Header, Algorithm, Validation, EncodingKey, DecodingKey};
-use chrono::{Utc, TimeDelta};
-use tracing::{error};
+use chrono::{TimeDelta, Utc};
+use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
+use serde::{Deserialize, Serialize};
+use tracing::error;
 
 use super::config::SecretConfig;
 use crate::domain::error::AppError;
@@ -31,15 +31,22 @@ impl JwtService {
             enc_key,
             dec_key,
             header,
-            validation
+            validation,
         }
     }
 
-    pub fn generate_token(&self, username: &str, email: &str, user_id: i64) -> Result<String, AppError> {
-        let expiration = if let Some(val) = Utc::now().checked_add_signed(TimeDelta::hours(24)){
+    pub fn generate_token(
+        &self,
+        username: &str,
+        email: &str,
+        user_id: i64,
+    ) -> Result<String, AppError> {
+        let expiration = if let Some(val) = Utc::now().checked_add_signed(TimeDelta::hours(24)) {
             val.timestamp()
-        }else{
-            return Err(AppError::InternalError("Can't generate timestamp of jwt token".to_string()));
+        } else {
+            return Err(AppError::InternalError(
+                "Can't generate timestamp of jwt token".to_string(),
+            ));
         };
         let claims = Claims {
             username: username.to_string(),
@@ -47,11 +54,13 @@ impl JwtService {
             id: user_id,
             exp: expiration as usize,
         };
-        let token = match encode(&self.header, &claims, &self.enc_key){
+        let token = match encode(&self.header, &claims, &self.enc_key) {
             Ok(val) => val,
             Err(e) => {
                 error!("{e}");
-                return Err(AppError::InternalError("Can't create jwt token".to_string()));
+                return Err(AppError::InternalError(
+                    "Can't create jwt token".to_string(),
+                ));
             }
         };
         Ok(token)
@@ -59,12 +68,8 @@ impl JwtService {
 
     pub fn verify_token(&self, token: &str) -> Option<Claims> {
         match decode::<Claims>(token, &self.dec_key, &self.validation) {
-            Ok(data) => {
-                Some(data.claims)
-            }
-            Err(_) => {
-                None
-            }
+            Ok(data) => Some(data.claims),
+            Err(_) => None,
         }
     }
 }
