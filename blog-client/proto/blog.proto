@@ -3,64 +3,72 @@ syntax = "proto3";
 package proto;
 
 service BlogService {
-    rpc Register(RegisterRequest) returns (AuthResponse);
-    /*rpc Login(LoginRequest) returns (AuthResponse);
-    rpc CreatePost(CreatePostRequest) returns (CreatePostResponse);
-    rpc GetPost(GetPostRequest) returns (PostResponse);
-    rpc UpdatePost(UpdatePostRequest) returns (UpdatePostResponse);
+    rpc Register(RegisterRequest) returns (RegisteredUser);
+    rpc Login(LoginRequest) returns (RegisteredUser);
+    rpc CreatePost(CreatePostRequest) returns (PostInfo);
+    rpc GetPost(PostId) returns (PostInfo);
+    rpc UpdatePost(UpdatePostRequest) returns (PostInfo);
     rpc DeletePost(DeletePostRequest) returns (DeletePostResponse);
-    rpc ListPosts(ListPostsRequest) returns (ListPostsResponse);*/
+    rpc GetPosts(GetPostsReq) returns (GetPostsResponse);
+}
+
+message NewPost {
+    string title = 1;
+    string content = 2;
 }
 
 message RegisterRequest {
-
+    string username = 1;
+    string email = 2;
+    string password = 3;
 }
 
-/*message LoginRequest {
-
-}*/
-
-message AuthResponse {
-
+message RegisteredUser {
+    string token = 1;
 }
 
-/*
-message CreatePostRequest {
-
+message LoginRequest {
+    string username = 1;
+    string password = 2;
 }
 
-message CreatePostResponse {
-
-}
-
-message GetPostRequest {
-
-}
-
-message PostResponse {
-
-}
-
-message UpdatePostRequest {
-
-}
-
-message UpdatePostResponse {
-
-}
-
-message DeletePostRequest {
-
-}
-
-message DeletePostResponse {
+message PostId {
     int64 id = 1;
 }
 
-message ListPostsRequest {
-
+message PostInfo {
+    string title = 1;
+    string content = 2;
+    int64 author_id = 3;
+    string created_at = 4;
+    string updated_at = 5;
 }
 
-message ListPostsResponse {
+message CreatePostRequest {
+    RegisteredUser reg_user = 1;
+    NewPost new_post = 2;
+}
 
-}*/
+message UpdatePostRequest {
+    RegisteredUser reg_user = 1;
+    NewPost new_post = 2;
+    PostId post_id = 3;
+}
+
+message DeletePostRequest {
+    RegisteredUser reg_user = 1;
+    PostId post_id = 2;
+}
+
+message DeletePostResponse {}
+
+message GetPostsReq {
+    int64 offset = 1;
+    int64 limit = 2;
+}
+
+message GetPostsResponse {
+    int64 offset = 1;
+    int64 limit = 2;
+    repeated PostInfo posts_info = 3;
+}

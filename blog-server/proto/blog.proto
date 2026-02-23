@@ -12,12 +12,6 @@ service BlogService {
     rpc GetPosts(GetPostsReq) returns (GetPostsResponse);
 }
 
-message AuthUser {
-    string username = 1;
-    string email = 2;
-    int64 id = 3;
-}
-
 message NewPost {
     string title = 1;
     string content = 2;
@@ -51,18 +45,18 @@ message PostInfo {
 }
 
 message CreatePostRequest {
-    AuthUser auth_user = 1;
+    RegisteredUser reg_user = 1;
     NewPost new_post = 2;
 }
 
 message UpdatePostRequest {
-    AuthUser auth_user = 1;
+    RegisteredUser reg_user = 1;
     NewPost new_post = 2;
     PostId post_id = 3;
 }
 
 message DeletePostRequest {
-    AuthUser auth_user = 1;
+    RegisteredUser reg_user = 1;
     PostId post_id = 2;
 }
 

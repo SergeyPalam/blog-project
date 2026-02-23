@@ -81,8 +81,13 @@ impl BlogService for BlogGrpcService {
         in_req: Request<CreatePostRequest>,
     ) -> Result<Response<PostInfo>, Status> {
         let in_req = in_req.into_inner();
-        let Some(in_auth_user) = in_req.auth_user else {
-            return Err(Status::failed_precondition("auth user not present"));
+        
+        let Some(reg_user) = in_req.reg_user else {
+            return Err(Status::failed_precondition("token not present"));
+        };
+
+        let Some(claims) = self.app_state.jwt_service.verify_token(&reg_user.token) else {
+            return Err(Status::unauthenticated("Invalid token"));
         };
 
         let Some(in_new_post) = in_req.new_post else {
@@ -91,9 +96,9 @@ impl BlogService for BlogGrpcService {
 
         let blog_service = self.app_state.blog_service.clone();
         let mut auth_user = blog_service::AuthUser::default();
-        auth_user.id = in_auth_user.id;
-        auth_user.username = in_auth_user.username;
-        auth_user.email = in_auth_user.email;
+        auth_user.id = claims.id;
+        auth_user.username = claims.username;
+        auth_user.email = claims.email;
 
         let mut new_post = blog_service::NewPost::default();
         new_post.title = in_new_post.title;
@@ -118,8 +123,12 @@ impl BlogService for BlogGrpcService {
         in_req: Request<UpdatePostRequest>,
     ) -> Result<Response<PostInfo>, Status> {
         let in_req = in_req.into_inner();
-        let Some(in_auth_user) = in_req.auth_user else {
-            return Err(Status::failed_precondition("auth user not present"));
+        let Some(reg_user) = in_req.reg_user else {
+            return Err(Status::failed_precondition("token not present"));
+        };
+
+        let Some(claims) = self.app_state.jwt_service.verify_token(&reg_user.token) else {
+            return Err(Status::unauthenticated("Invalid token"));
         };
 
         let Some(in_new_post) = in_req.new_post else {
@@ -132,9 +141,9 @@ impl BlogService for BlogGrpcService {
 
         let blog_service = self.app_state.blog_service.clone();
         let mut auth_user = blog_service::AuthUser::default();
-        auth_user.id = in_auth_user.id;
-        auth_user.username = in_auth_user.username;
-        auth_user.email = in_auth_user.email;
+        auth_user.id = claims.id;
+        auth_user.username = claims.username;
+        auth_user.email = claims.email;
 
         let mut new_post = blog_service::NewPost::default();
         new_post.title = in_new_post.title;
@@ -153,8 +162,12 @@ impl BlogService for BlogGrpcService {
         in_req: Request<DeletePostRequest>,
     ) -> Result<Response<DeletePostResponse>, Status> {
         let in_req = in_req.into_inner();
-        let Some(in_auth_user) = in_req.auth_user else {
-            return Err(Status::failed_precondition("auth user not present"));
+        let Some(reg_user) = in_req.reg_user else {
+            return Err(Status::failed_precondition("token not present"));
+        };
+
+        let Some(claims) = self.app_state.jwt_service.verify_token(&reg_user.token) else {
+            return Err(Status::unauthenticated("Invalid token"));
         };
 
         let Some(in_post_id) = in_req.post_id else {
@@ -163,9 +176,9 @@ impl BlogService for BlogGrpcService {
 
         let blog_service = self.app_state.blog_service.clone();
         let mut auth_user = blog_service::AuthUser::default();
-        auth_user.id = in_auth_user.id;
-        auth_user.username = in_auth_user.username;
-        auth_user.email = in_auth_user.email;
+        auth_user.id = claims.id;
+        auth_user.username = claims.username;
+        auth_user.email = claims.email;
 
         let mut post_id = blog_service::PostId::default();
         post_id.id = in_post_id.id;

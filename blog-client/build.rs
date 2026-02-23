@@ -5,11 +5,8 @@ fn main() {
     if let Err(e) = tonic_prost_build::configure()
         .build_client(true)
         .build_server(false)
-        .out_dir("proto")
-        .compile_protos(
-            &["proto/blog.proto"],
-            &["proto"],
-        )
+        .out_dir("src/grpc_client")
+        .compile_protos(&["proto/blog.proto"], &["proto"])
     {
         println!("cargo:warning={e}");
     }
