@@ -9,6 +9,7 @@ use crate::pod;
 impl From<PostInfo> for pod::PostInfo {
     fn from(value: PostInfo) -> Self {
         Self {
+            id: value.id,
             title: value.title,
             content: value.content,
             author_id: value.author_id,

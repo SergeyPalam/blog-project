@@ -43,6 +43,7 @@ pub struct GetPostsReq {
 
 #[derive(Serialize, Deserialize, Default, Debug)]
 pub struct PostInfo {
+    pub id: i64,
     pub title: String,
     pub content: String,
     pub author_id: i64,

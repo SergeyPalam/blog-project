@@ -7,7 +7,7 @@ pub mod presentation;
 use tonic::transport::Server;
 
 use actix_cors::Cors;
-use actix_web::{App, HttpServer, web};
+use actix_web::{App, HttpServer, guard, web};
 use anyhow::{Result, bail};
 use tracing;
 use tracing_actix_web::TracingLogger;
@@ -59,20 +59,19 @@ async fn main() -> Result<()> {
                             .route("/login", web::post().to(login)),
                     )
                     .service(
-                        web::scope("posts")
-                            .service(
-                                web::scope("")
-                                    .wrap(middleware::Jwt)
-                                    .route("", web::post().to(create_post))
-                                    .route("/{id}", web::put().to(update_post))
-                                    .route("/{id}", web::delete().to(delete_post)),
-                            )
-                            .service(
-                                web::scope("")
-                                    .route("", web::get().to(get_posts))
-                                    .route("/{id}", web::get().to(get_post)),
-                            ),
-                    ),
+                        web::scope("/posts")
+                            .guard(guard::Any(guard::Post()).or(guard::Put()).or(guard::Delete()))
+                            .wrap(middleware::Jwt)
+                            .route("", web::post().to(create_post))
+                            .route("/{id}", web::put().to(update_post))
+                            .route("/{id}", web::delete().to(delete_post)),
+                        )
+                    .service(
+                        web::scope("/posts")
+                            .guard(guard::Get())
+                            .route("", web::get().to(get_posts))
+                            .route("/{id}", web::get().to(get_post)),
+                    )
             )
     })
     .bind("0.0.0.0:3000")?

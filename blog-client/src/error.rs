@@ -7,7 +7,7 @@ pub enum ClientError {
     AlreadyExists(String),
     #[error("User unauthorized: {0}")]
     Unauthorized(String),
-    #[error("User not found: {0}")]
+    #[error("Not found: {0}")]
     NotFound(String),
     #[error("Unknown server error: {0}")]
     UnknownServerErr(String),

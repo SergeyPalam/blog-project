@@ -24,6 +24,7 @@ impl From<AppError> for Status {
 impl From<blog_service::PostInfo> for PostInfo {
     fn from(value: blog_service::PostInfo) -> Self {
         Self {
+            id: value.id,
             title: value.title,
             content: value.content,
             author_id: value.author_id,

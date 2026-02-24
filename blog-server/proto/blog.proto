@@ -42,11 +42,12 @@ message PostId {
 }
 
 message PostInfo {
-    string title = 1;
-    string content = 2;
-    int64 author_id = 3;
-    string created_at = 4;
-    string updated_at = 5;
+    int64 id = 1;
+    string title = 2;
+    string content = 3;
+    int64 author_id = 4;
+    string created_at = 5;
+    string updated_at = 6;
 }
 
 message CreatePostRequest {

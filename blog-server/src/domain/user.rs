@@ -5,7 +5,7 @@ use derive_more::Debug;
 use std::fmt::Display;
 
 use super::error::AppError;
-use crate::infrastructure::hash::hash_password;
+use crate::infrastructure::hash::{hash_password, verify_password};
 
 #[derive(Debug)]
 pub struct User {
@@ -42,18 +42,10 @@ impl User {
     }
 
     pub fn verify_user(&self, password: &str) -> Result<(), AppError> {
-        let password_hash = match hash_password(password) {
-            Ok(val) => val,
-            Err(e) => {
-                error!("{e}");
-                return Err(AppError::InternalError("Can't hash password".to_string()));
-            }
-        };
-
-        if self.password_hash != password_hash {
-            info!("Attempt to log with wrong credentials: {}", self.username);
+        if let Err(e) = verify_password(password, &self.password_hash) {
+            info!("Attempt to log with wrong credentials: {e} for user {}", self.username);
             return Err(AppError::Unauthorized(self.username.to_owned()));
-        }
+        };
 
         Ok(())
     }

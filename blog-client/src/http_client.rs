@@ -12,14 +12,15 @@ impl HttpClient {
     pub fn new(addr: &str) -> Self {
         Self {
             client: Client::new(),
-            addr: addr.to_string(),
+            addr: format!("{addr}/api"),
         }
     }
 
     pub async fn register(&self, reg_req: RegisterUserReq) -> Result<RegisteredUser, ClientError> {
+        let url = format!("{}/auth/register", self.addr);
         let resp = self
             .client
-            .post(&self.addr)
+            .post(url)
             .json(&reg_req)
             .send()
             .await?
@@ -30,9 +31,10 @@ impl HttpClient {
     }
 
     pub async fn login(&self, log_req: LoginUserReq) -> Result<RegisteredUser, ClientError> {
+        let url = format!("{}/auth/login", self.addr);
         let resp = self
             .client
-            .post(&self.addr)
+            .post(url)
             .json(&log_req)
             .send()
             .await?
@@ -47,9 +49,10 @@ impl HttpClient {
         token: &str,
         new_post_req: NewPost,
     ) -> Result<PostInfo, ClientError> {
+        let url = format!("{}/posts", self.addr);
         let resp = self
             .client
-            .post(&self.addr)
+            .post(url)
             .json(&new_post_req)
             .bearer_auth(token)
             .send()
@@ -66,7 +69,7 @@ impl HttpClient {
         post_id: PostId,
         update_post: UpdatePost,
     ) -> Result<PostInfo, ClientError> {
-        let url = format!("{}/{}", self.addr, post_id.id);
+        let url = format!("{}/posts/{}", self.addr, post_id.id);
         let resp = self
             .client
             .put(url)
@@ -81,7 +84,7 @@ impl HttpClient {
     }
 
     pub async fn delete_post(&self, token: &str, post_id: PostId) -> Result<(), ClientError> {
-        let url = format!("{}/{}", self.addr, post_id.id);
+        let url = format!("{}/posts/{}", self.addr, post_id.id);
         self.client
             .delete(url)
             .bearer_auth(token)
@@ -93,7 +96,7 @@ impl HttpClient {
     }
 
     pub async fn get_post(&self, post_id: PostId) -> Result<PostInfo, ClientError> {
-        let url = format!("{}/{}", self.addr, post_id.id);
+        let url = format!("{}/posts/{}", self.addr, post_id.id);
         let resp = self.client.get(url).send().await?.error_for_status()?;
 
         let post_info = resp.json::<PostInfo>().await?;
@@ -105,9 +108,10 @@ impl HttpClient {
             offset: Some(offset),
             limit: Some(limit),
         };
+        let url = format!("{}/posts", self.addr);
         let resp = self
             .client
-            .get(&self.addr)
+            .get(url)
             .query(&query)
             .send()
             .await?

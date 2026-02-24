@@ -40,9 +40,10 @@ impl PostRepository {
     pub async fn add_new_post(&self, post: &Post) -> Result<(), AppError> {
         let query = sqlx::query! {
             r#"
-             INSERT INTO posts (title, content, author_id, created_at, updated_at)
-             VALUES ($1, $2, $3, $4, $5)
+             INSERT INTO posts (id, title, content, author_id, created_at, updated_at)
+             VALUES ($1, $2, $3, $4, $5, $6)
             "#,
+            post.id,
             post.title,
             post.content,
             post.author_id,
@@ -166,8 +167,8 @@ impl PostRepository {
              ORDER BY updated_at DESC
              LIMIT $1 OFFSET $2
             "#,
+            limit,
             offset,
-            limit
         };
 
         let posts = match query.fetch_all(&self.pool).await {
