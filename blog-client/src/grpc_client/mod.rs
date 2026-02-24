@@ -96,8 +96,8 @@ impl GrpcClient {
         &mut self,
         token: &str,
         post_id: i64,
-        title: String,
-        content: String,
+        title: Option<String>,
+        content: Option<String>,
     ) -> Result<pod::PostInfo, ClientError> {
         let response = self
             .client
@@ -105,7 +105,7 @@ impl GrpcClient {
                 reg_user: Some(RegisteredUser {
                     token: token.to_string(),
                 }),
-                new_post: Some(NewPost { title, content }),
+                update_post: Some(UpdatePost { title, content }),
                 post_id: Some(PostId { id: post_id }),
             })
             .await?

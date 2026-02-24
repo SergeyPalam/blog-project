@@ -111,8 +111,8 @@ impl PostRepository {
     pub async fn update_post(
         &self,
         post_id: i64,
-        new_title: String,
-        new_content: String,
+        new_title: Option<String>,
+        new_content: Option<String>,
     ) -> Result<Post, AppError> {
         let mut post = self.get_post(post_id).await?;
         post.update(new_title, new_content);

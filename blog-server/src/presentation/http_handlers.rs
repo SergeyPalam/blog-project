@@ -55,14 +55,14 @@ pub async fn get_post(
 pub async fn update_post(
     auth_user: AuthUser,
     post_id: web::Path<PostId>,
-    new_post: web::Json<NewPost>,
+    update_post: web::Json<UpdatePost>,
     app_state: web::Data<AppState>,
 ) -> Result<HttpResponse, AppError> {
     let blog_service = app_state.blog_service.clone();
     let post_id = post_id.into_inner();
-    let new_post = new_post.into_inner();
+    let update_post = update_post.into_inner();
     let resp_data = blog_service
-        .update_post(auth_user, post_id, new_post)
+        .update_post(auth_user, post_id, update_post)
         .await?;
     Ok(HttpResponse::Ok().status(StatusCode::OK).json(resp_data))
 }

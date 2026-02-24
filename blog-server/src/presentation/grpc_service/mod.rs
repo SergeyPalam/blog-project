@@ -131,7 +131,7 @@ impl BlogService for BlogGrpcService {
             return Err(Status::unauthenticated("Invalid token"));
         };
 
-        let Some(in_new_post) = in_req.new_post else {
+        let Some(in_update_post) = in_req.update_post else {
             return Err(Status::failed_precondition("new post not present"));
         };
 
@@ -145,14 +145,14 @@ impl BlogService for BlogGrpcService {
         auth_user.username = claims.username;
         auth_user.email = claims.email;
 
-        let mut new_post = blog_service::NewPost::default();
-        new_post.title = in_new_post.title;
-        new_post.content = in_new_post.content;
+        let mut update_post = blog_service::UpdatePost::default();
+        update_post.title = in_update_post.title;
+        update_post.content = in_update_post.content;
 
         let mut post_id = blog_service::PostId::default();
         post_id.id = in_post_id.id;
         let out_post_info = blog_service
-            .update_post(auth_user, post_id, new_post)
+            .update_post(auth_user, post_id, update_post)
             .await?;
         Ok(Response::new(PostInfo::from(out_post_info)))
     }

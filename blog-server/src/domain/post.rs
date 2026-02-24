@@ -22,9 +22,15 @@ impl Post {
         }
     }
 
-    pub fn update(&mut self, new_title: String, new_content: String) {
-        self.title = new_title;
-        self.content = new_content;
-        self.updated_at = Utc::now();
+    pub fn update(&mut self, new_title: Option<String>, new_content: Option<String>) {
+        if new_title.is_some() || new_content.is_some() {
+            self.updated_at = Utc::now();
+        }
+        if let Some(title) = new_title {
+            self.title = title;
+        }
+        if let Some(content) = new_content {
+            self.content = content;
+        }
     }
 }

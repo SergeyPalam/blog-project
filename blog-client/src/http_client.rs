@@ -64,14 +64,14 @@ impl HttpClient {
         &self,
         token: &str,
         post_id: PostId,
-        new_post: NewPost,
+        update_post: UpdatePost,
     ) -> Result<PostInfo, ClientError> {
         let url = format!("{}/{}", self.addr, post_id.id);
         let resp = self
             .client
             .put(url)
             .bearer_auth(token)
-            .json(&new_post)
+            .json(&update_post)
             .send()
             .await?
             .error_for_status()?;

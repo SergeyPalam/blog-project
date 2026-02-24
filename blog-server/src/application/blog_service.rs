@@ -41,6 +41,12 @@ pub struct NewPost {
 }
 
 #[derive(Deserialize, Default)]
+pub struct UpdatePost {
+    pub title: Option<String>,
+    pub content: Option<String>,
+}
+
+#[derive(Deserialize, Default)]
 pub struct PostId {
     pub id: i64,
 }
@@ -109,7 +115,7 @@ impl BlogService {
         &self,
         auth_user: AuthUser,
         post_id: PostId,
-        new_post: NewPost,
+        update_post: UpdatePost,
     ) -> Result<PostInfo, AppError> {
         let author_id = self.post_repo.get_post_author_id(post_id.id).await?;
         if author_id != auth_user.id {
@@ -124,7 +130,7 @@ impl BlogService {
 
         let post = self
             .post_repo
-            .update_post(post_id.id, new_post.title, new_post.content)
+            .update_post(post_id.id, update_post.title, update_post.content)
             .await?;
         Ok(PostInfo::from(post))
     }
