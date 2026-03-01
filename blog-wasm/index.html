@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Блог на WASM с пагинацией и управлением постами</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background: #f5f7fa;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem;
+        }
+
+        .app {
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .card {
+            background: white;
+            border-radius: 1rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #1e293b;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            color: #334155;
+            margin-bottom: 1.25rem;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 0.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .tab {
+            flex: 1;
+            padding: 0.75rem;
+            text-align: center;
+            background: #f1f5f9;
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            color: #64748b;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #334155;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+        }
+
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .logout-btn {
+            background: #ef4444;
+            margin-bottom: 1rem;
+        }
+
+        .logout-btn:hover {
+            background: #dc2626;
+        }
+
+        .message {
+            margin-top: 1rem;
+            padding: 0.75rem;
+            border-radius: 0.75rem;
+            font-weight: 500;
+        }
+
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .post {
+            background: #f8fafc;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid #e2e8f0;
+            position: relative;
+        }
+
+        .post h3 {
+            color: #0f172a;
+            margin-bottom: 0.5rem;
+            padding-right: 100px; /* место для кнопок */
+        }
+
+        .post-meta {
+            font-size: 0.875rem;
+            color: #64748b;
+            margin-bottom: 1rem;
+        }
+
+        .post-content {
+            color: #334155;
+            line-height: 1.6;
+        }
+
+        .post-actions {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .post-actions button {
+            padding: 0.4rem 0.8rem;
+            font-size: 0.875rem;
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .post-actions button:hover {
+            background: #cbd5e1;
+        }
+
+        .post-actions .delete-btn:hover {
+            background: #ef4444;
+            color: white;
+        }
+
+        .post-actions .edit-btn:hover {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        #postsContainer {
+            margin-top: 2rem;
+        }
+
+        .flex {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 2rem;
+        }
+
+        .pagination span {
+            font-weight: 500;
+            color: #334155;
+        }
+
+        /* Модальное окно для редактирования */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h3 {
+            margin-bottom: 1.5rem;
+            color: #1e293b;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .cancel-btn {
+            background: #e2e8f0;
+            color: #334155;
+        }
+
+        .cancel-btn:hover {
+            background: #cbd5e1;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <h1>✍️ Мой блог</h1>
+
+        <!-- Блок для неавторизованных пользователей -->
+        <div id="authBlock" class="card">
+            <div class="tabs">
+                <button class="tab active" id="loginTab">Вход</button>
+                <button class="tab" id="registerTab">Регистрация</button>
+            </div>
+
+            <!-- Форма входа -->
+            <div id="loginForm" class="form">
+                <h2>Вход</h2>
+                <form id="login">
+                    <div class="form-group">
+                        <label for="loginUsername">Username</label>
+                        <input type="text" id="loginUsername" required placeholder="Palamarchuk">
+                    </div>
+                    <div class="form-group">
+                        <label for="loginPassword">Пароль</label>
+                        <input type="password" id="loginPassword" required placeholder="••••••••">
+                    </div>
+                    <button type="submit">Войти</button>
+                    <div id="loginMessage" class="message hidden"></div>
+                </form>
+            </div>
+
+            <!-- Форма регистрации -->
+            <div id="registerForm" class="form hidden">
+                <h2>Регистрация</h2>
+                <form id="register">
+                    <div class="form-group">
+                        <label for="registerName">Имя</label>
+                        <input type="text" id="registerName" required placeholder="Иван Иванов">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerEmail">Email</label>
+                        <input type="email" id="registerEmail" required placeholder="example@mail.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="registerPassword">Пароль</label>
+                        <input type="password" id="registerPassword" required minlength="6" placeholder="Минимум 6 символов">
+                    </div>
+                    <button type="submit">Зарегистрироваться</button>
+                    <div id="registerMessage" class="message hidden"></div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Блок для авторизованных пользователей -->
+        <div id="userBlock" class="card hidden">
+            <div class="flex">
+                <h2>Создать новый пост</h2>
+                <button id="logoutBtn" class="logout-btn">Выйти</button>
+            </div>
+            <form id="createPostForm">
+                <div class="form-group">
+                    <label for="postTitle">Заголовок</label>
+                    <input type="text" id="postTitle" required placeholder="Заголовок поста">
+                </div>
+                <div class="form-group">
+                    <label for="postContent">Содержание</label>
+                    <textarea id="postContent" rows="5" required placeholder="Текст поста..."></textarea>
+                </div>
+                <button type="submit">Опубликовать</button>
+                <div id="postMessage" class="message hidden"></div>
+            </form>
+        </div>
+
+        <!-- Контейнер для списка постов -->
+        <div id="postsContainer" class="card">
+            <h2>Последние посты</h2>
+            <div id="postsList"></div>
+            <div id="postsMessage" class="message hidden"></div>
+            
+            <!-- Элементы пагинации -->
+            <div class="pagination" id="pagination">
+                <button id="prevPage" disabled>← Предыдущая</button>
+                <span id="pageInfo">Страница 1</span>
+                <button id="nextPage" enabled>Следующая →</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно редактирования поста -->
+    <div id="editModal" class="modal hidden">
+        <div class="modal-content">
+            <h3>Редактировать пост</h3>
+            <form id="editPostForm">
+                <div class="form-group">
+                    <label for="editTitle">Заголовок</label>
+                    <input type="text" id="editTitle" required>
+                </div>
+                <div class="form-group">
+                    <label for="editContent">Содержание</label>
+                    <textarea id="editContent" rows="5" required></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" id="cancelEditBtn" class="cancel-btn">Отмена</button>
+                    <button type="submit">Сохранить</button>
+                </div>
+                <div id="editMessage" class="message hidden"></div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        // --- Инициализация WASM модуля ---
+        let blogApp = null;
+        let currentUserId = null; // ID текущего пользователя (если авторизован)
+
+        async function initWasm() {
+            try {
+                const module = await import('./pkg/blog_wasm.js');
+                if (module.default && typeof module.default === 'function') {
+                    await module.default();
+                }
+                blogApp = new module.BlogApp("http://127.0.0.1:3000");
+                console.log('WASM модуль загружен');
+            } catch (err) {
+                console.error('Ошибка загрузки WASM:', err);
+                showGlobalMessage('Не удалось загрузить модуль. Проверьте консоль.', 'error');
+            }
+        }
+
+        // --- DOM элементы ---
+        const authBlock = document.getElementById('authBlock');
+        const userBlock = document.getElementById('userBlock');
+        const postsList = document.getElementById('postsList');
+        const postsMessage = document.getElementById('postsMessage');
+        const paginationDiv = document.getElementById('pagination');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const pageInfoSpan = document.getElementById('pageInfo');
+
+        // Вкладки и формы
+        const loginTab = document.getElementById('loginTab');
+        const registerTab = document.getElementById('registerTab');
+        const loginFormDiv = document.getElementById('loginForm');
+        const registerFormDiv = document.getElementById('registerForm');
+        const loginForm = document.getElementById('login');
+        const registerForm = document.getElementById('register');
+        const createPostForm = document.getElementById('createPostForm');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        // Поля сообщений
+        const loginMessage = document.getElementById('loginMessage');
+        const registerMessage = document.getElementById('registerMessage');
+        const postMessage = document.getElementById('postMessage');
+
+        // Модальное окно редактирования
+        const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editPostForm');
+        const editTitle = document.getElementById('editTitle');
+        const editContent = document.getElementById('editContent');
+        const cancelEditBtn = document.getElementById('cancelEditBtn');
+        const editMessage = document.getElementById('editMessage');
+        let currentEditingPostId = null; // ID поста, который редактируется
+
+        // --- Состояние пагинации ---
+        let currentPage = 1n;
+        let isNextActive = true;
+        const limit = 10n;
+
+        // --- Вспомогательные функции ---
+        function showMessage(element, text, type = 'success') {
+            element.textContent = text;
+            element.className = `message ${type}`;
+            element.classList.remove('hidden');
+        }
+
+        function hideMessage(element) {
+            element.classList.add('hidden');
+        }
+
+        function clearInputs(...forms) {
+            forms.forEach(form => {
+                if (form) form.reset();
+            });
+        }
+
+        // Получение текущего пользователя (если метод существует)
+        async function fetchCurrentUser() {
+            if (!blogApp) return null;
+            try {
+                if (blogApp.get_current_user_id) {
+                    const user = await blogApp.get_current_user_id();
+                    console.log('Current user id: ', user.id);
+                    return user ? user.id : null;
+                }
+            } catch (err) {
+                console.error('Ошибка получения текущего пользователя:', err);
+            }
+            return null;
+        }
+
+        // Обновление UI в зависимости от статуса аутентификации
+        async function updateUI() {
+            if (!blogApp) return;
+
+            console.log('Ret auth', blogApp.is_authenticated());
+            const isAuth = blogApp.is_authenticated ? blogApp.is_authenticated() : false;
+            console.log('Is Auth: ', isAuth);
+            if (isAuth) {
+                // Получаем ID текущего пользователя
+                currentUserId = await fetchCurrentUser();
+                authBlock.classList.add('hidden');
+                userBlock.classList.remove('hidden');
+            } else {
+                currentUserId = null;
+                authBlock.classList.remove('hidden');
+                userBlock.classList.add('hidden');
+            }
+            // При смене статуса сбрасываем на первую страницу
+            currentPage = 1n;
+            loadPosts();
+        }
+
+        // Загрузка постов с пагинацией
+        async function loadPosts() {
+            if (!blogApp) return;
+
+            try {
+                const result = await blogApp.get_posts((currentPage - 1n) * limit, limit);
+                console.log(result);
+
+                if (result.posts) {
+                    renderPosts(result.posts);
+                    if (result.posts.length < limit) {
+                        isNextActive = false
+                    } else {
+                        isNextActive = true
+                    }
+                    console.log('Count posts: ', result.posts.length);
+                    updatePaginationControls();
+                    hideMessage(postsMessage);
+                } else {
+                    showMessage(postsMessage, result.error || 'Не удалось загрузить посты', 'error');
+                }
+            } catch (err) {
+                showMessage(postsMessage, 'Ошибка при загрузке постов', 'error');
+                console.error(err);
+            }
+        }
+
+        function renderPosts(posts) {
+            if (!posts || posts.length === 0) {
+                postsList.innerHTML = '<p style="color: #64748b;">Пока нет постов. Будьте первым!</p>';
+                return;
+            }
+
+            postsList.innerHTML = posts.map(post => {
+                const isAuthor = currentUserId && post.author_id === currentUserId;
+                const actions = isAuthor ? `
+                    <div class="post-actions">
+                        <button class="edit-btn" data-post-id="${post.id}">Редактировать</button>
+                        <button class="delete-btn" data-post-id="${post.id}">Удалить</button>
+                    </div>
+                ` : '';
+
+                return `
+                    <div class="post" data-post-id="${post.id}">
+                        <h3>${escapeHtml(post.title)}</h3>
+                        <div class="post-meta">
+                            Автор: ${escapeHtml(post.author || 'Неизвестно')} • 
+                            ${new Date(post.created_at).toLocaleString()}
+                        </div>
+                        <div class="post-content">${escapeHtml(post.content).replace(/\n/g, '<br>')}</div>
+                        ${actions}
+                    </div>
+                `;
+            }).join('');
+
+            // Добавляем обработчики для кнопок редактирования и удаления
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const postId = btn.dataset.postId;
+                    const post = posts.find(p => p.id == postId);
+                    if (post) openEditModal(post);
+                });
+            });
+
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const postId = btn.dataset.postId;
+                    handleDeletePost(postId);
+                });
+            });
+        }
+
+        function updatePaginationControls() {
+            pageInfoSpan.textContent = `Страница ${currentPage}`;
+            prevPageBtn.disabled = currentPage <= 1;
+            nextPageBtn.disabled = !isNextActive;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // --- Функции для редактирования ---
+        function openEditModal(post) {
+            currentEditingPostId = post.id;
+            editTitle.value = post.title;
+            editContent.value = post.content;
+            hideMessage(editMessage);
+            editModal.classList.remove('hidden');
+        }
+
+        function closeEditModal() {
+            editModal.classList.add('hidden');
+            currentEditingPostId = null;
+            editForm.reset();
+        }
+
+        async function handleEditSubmit(e) {
+            e.preventDefault();
+            hideMessage(editMessage);
+
+            if (!currentEditingPostId) return;
+
+            const title = editTitle.value.trim();
+            const content = editContent.value.trim();
+
+            if (!title || !content) {
+                showMessage(editMessage, 'Заполните все поля', 'error');
+                return;
+            }
+
+            try {
+                const result = await blogApp.update_post(BigInt(currentEditingPostId), title, content);
+                if (result.success) {
+                    showMessage(editMessage, 'Пост обновлён!', 'success');
+                    setTimeout(() => {
+                        closeEditModal();
+                        loadPosts(); // Перезагружаем список
+                    }, 1000);
+                } else {
+                    showMessage(editMessage, result.message || 'Ошибка при редактировании', 'error');
+                }
+            } catch (err) {
+                showMessage(editMessage, 'Ошибка соединения', 'error');
+                console.error(err);
+            }
+        }
+
+        async function handleDeletePost(postId) {
+            if (!confirm('Вы уверены, что хотите удалить этот пост?')) return;
+
+            try {
+                const result = await blogApp.delete_post(postId);
+                if (result.success) {
+                    // Показываем сообщение об успехе
+                    showMessage(postsMessage, 'Пост удалён!', 'success');
+                    loadPosts(); // Перезагружаем список
+                } else {
+                    showMessage(postsMessage, result.message || 'Ошибка при удалении', 'error');
+                }
+            } catch (err) {
+                showMessage(postsMessage, 'Ошибка соединения', 'error');
+                console.error(err);
+            }
+        }
+
+        // --- Обработчики событий ---
+
+        loginTab.addEventListener('click', () => {
+            loginTab.classList.add('active');
+            registerTab.classList.remove('active');
+            loginFormDiv.classList.remove('hidden');
+            registerFormDiv.classList.add('hidden');
+            hideMessage(loginMessage);
+            hideMessage(registerMessage);
+        });
+
+        registerTab.addEventListener('click', () => {
+            registerTab.classList.add('active');
+            loginTab.classList.remove('active');
+            registerFormDiv.classList.remove('hidden');
+            loginFormDiv.classList.add('hidden');
+            hideMessage(loginMessage);
+            hideMessage(registerMessage);
+        });
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessage(loginMessage);
+
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                const result = await blogApp.login(username, password);
+                if (result.success) {
+                    showMessage(loginMessage, 'Успешный вход!', 'success');
+                    clearInputs(loginForm);
+                    await updateUI(); // обновит UI и загрузит посты
+                } else {
+                    showMessage(loginMessage, result.message || 'Ошибка входа', 'error');
+                }
+            } catch (err) {
+                showMessage(loginMessage, 'Ошибка соединения', 'error');
+                console.error(err);
+            }
+        });
+
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessage(registerMessage);
+
+            const name = document.getElementById('registerName').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+
+            try {
+                const result = await blogApp.register(name, email, password);
+                console.log('Palam', result);
+                if (result.success) {
+                    showMessage(registerMessage, 'Регистрация успешна!', 'success');
+                    clearInputs(registerForm);
+                    await updateUI(); // обновит UI и загрузит посты
+                } else {
+                    showMessage(registerMessage, result.message || 'Ошибка регистрации', 'error');
+                }
+            } catch (err) {
+                showMessage(registerMessage, 'Ошибка соединения', 'error');
+                console.error(err);
+            }
+        });
+
+        createPostForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessage(postMessage);
+
+            const title = document.getElementById('postTitle').value;
+            const content = document.getElementById('postContent').value;
+
+            try {
+                const result = await blogApp.create_post(title, content);
+                if (result.success) {
+                    showMessage(postMessage, 'Пост опубликован!', 'success');
+                    clearInputs(createPostForm);
+                    currentPage = 1n;
+                    await loadPosts();
+                } else {
+                    showMessage(postMessage, result.message || 'Ошибка при создании поста', 'error');
+                }
+            } catch (err) {
+                showMessage(postMessage, 'Ошибка соединения', 'error');
+                console.error(err);
+            }
+        });
+
+        logoutBtn.addEventListener('click', async () => {
+            try {
+                await blogApp.logout();
+                currentUserId = null;
+                currentPage = 1n;
+                updateUI();
+                console.log('UI updated');
+            } catch (err) {
+                console.error('Ошибка при выходе:', err);
+            }
+        });
+
+        // Пагинация
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                loadPosts();
+            }
+        });
+
+        nextPageBtn.addEventListener('click', () => {
+            if (isNextActive) {
+                currentPage++;
+                loadPosts();
+            }
+        });
+
+        // Модальное окно: отмена
+        cancelEditBtn.addEventListener('click', closeEditModal);
+        editForm.addEventListener('submit', handleEditSubmit);
+
+        // Закрытие модалки по клику на фон
+        editModal.addEventListener('click', (e) => {
+            if (e.target === editModal) closeEditModal();
+        });
+
+        // --- Старт приложения ---
+        (async function start() {
+            await initWasm();
+            if (blogApp) {
+                // Попытаемся получить текущего пользователя при старте
+                await updateUI();
+                await loadPosts();
+            } else {
+                showGlobalMessage('Не удалось инициализировать приложение', 'error');
+            }
+        })();
+
+        function showGlobalMessage(text, type) {
+            showMessage(postsMessage, text, type);
+        }
+    </script>
+</body>
+</html>
