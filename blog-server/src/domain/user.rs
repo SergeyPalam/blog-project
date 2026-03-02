@@ -56,3 +56,34 @@ impl Display for User {
         write!(f, "User: name: {}, email: {}", self.username, self.email)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::domain::error::AppError;
+
+    #[test]
+    fn test_create() {
+        let user = User::create(5, "name".to_string(), "mail".to_string(), "pass".to_string()).unwrap();
+        assert_eq!(user.id, 5);
+        assert_eq!(user.username, "name");
+        assert_eq!(user.email, "mail");
+        assert!(!user.password_hash.is_empty());
+    }
+
+    #[test]
+    fn test_verify() {
+        let user = User::create(5, "name".to_string(), "mail".to_string(), "pass".to_string()).unwrap();
+        assert!(user.verify_user("pass").is_ok());
+        let err = user.verify_user("wrong_pass").err().unwrap();
+        match err {
+            AppError::Unauthorized(msg) => {
+                assert!(!msg.is_empty());
+            }
+            _ => {
+                panic!("Wrong type error");
+            }
+        }
+    }
+}
+

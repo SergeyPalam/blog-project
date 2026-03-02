@@ -34,3 +34,45 @@ impl Post {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_create() {
+        let post = Post::create(5, "new_title".to_string(), "new_content".to_string(), 6);
+        assert_eq!(post.id, 5);
+        assert_eq!(post.title, "new_title");
+        assert_eq!(post.content, "new_content");
+        assert_eq!(post.author_id, 6);
+        assert_eq!(post.created_at, post.updated_at);
+    }
+
+    #[test]
+    fn test_update() {
+        let mut post = Post::create(5, "new_title".to_string(), "new_content".to_string(), 6);
+        post.update(None, None);
+
+        assert_eq!(post.id, 5);
+        assert_eq!(post.title, "new_title");
+        assert_eq!(post.content, "new_content");
+        assert_eq!(post.author_id, 6);
+        assert_eq!(post.created_at, post.updated_at);
+
+        post.update(Some("updated_title".to_string()), None);
+        assert_eq!(post.id, 5);
+        assert_eq!(post.title, "updated_title");
+        assert_eq!(post.content, "new_content");
+        assert_eq!(post.author_id, 6);
+        assert!(post.updated_at > post.created_at);
+
+        let prev_updated = post.updated_at;
+        post.update(None, Some("updated_content".to_string()));
+        assert_eq!(post.id, 5);
+        assert_eq!(post.title, "updated_title");
+        assert_eq!(post.content, "updated_content");
+        assert_eq!(post.author_id, 6);
+        assert!(post.updated_at > prev_updated);
+    }
+}

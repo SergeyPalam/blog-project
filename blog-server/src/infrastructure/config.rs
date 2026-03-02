@@ -45,3 +45,39 @@ impl Config {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env;
+
+    fn set_env(key: &str, val: &str) {
+        unsafe {
+            env::set_var(key, val);
+        }
+    }
+
+    #[test]
+    fn test_from_environment() {
+        set_env("DB_NAME", "db");
+        set_env("DB_USER", "user");
+        set_env("DB_HOST", "localhost");
+        set_env("DB_PORT", "5432");
+        set_env("DB_PASS", "pass");
+        set_env("DB_MAX_CONN", "20");
+        set_env("DB_MIN_CONN", "5");
+        set_env("LOG_LEVEL", "info");
+        set_env("JWT_SECRET", "secret");
+
+        let config = Config::from_environment().unwrap();
+        assert_eq!(config.db_config.name, "db");
+        assert_eq!(config.db_config.user, "user");
+        assert_eq!(config.db_config.host, "localhost");
+        assert_eq!(config.db_config.port, 5432);
+        assert_eq!(config.db_config.pass, "pass");
+        assert_eq!(config.db_config.max_connections, 20);
+        assert_eq!(config.db_config.min_connections, 5);
+        assert_eq!(config.log_config.level, "info");
+        assert_eq!(config.secret_config.jwt_secret, "secret");
+    }
+}

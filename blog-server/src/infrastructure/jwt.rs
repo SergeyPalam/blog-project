@@ -73,3 +73,18 @@ impl JwtService {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_generate_verify() {
+        let jwt_service = JwtService::new(&SecretConfig { jwt_secret: "secret".to_string() });
+        let token = jwt_service.generate_token("user", "mail", 5).unwrap();
+        let claims = jwt_service.verify_token(&token).unwrap();
+        assert_eq!(claims.username, "user");
+        assert_eq!(claims.email, "mail");
+        assert_eq!(claims.id, 5);
+    }
+}

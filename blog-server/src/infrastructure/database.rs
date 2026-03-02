@@ -23,3 +23,25 @@ pub async fn run_migrations(pool: &PgPool) -> Result<(), sqlx::Error> {
     migrate!("./migrations").run(pool).await?;
     Ok(())
 }
+
+#[cfg(test)]
+mod tests{
+    use super::*;
+    use crate::infrastructure::config::DbConfig;
+
+    #[test]
+    fn test_db_url_from_params() {
+        let db_config = DbConfig {
+            name: "db".to_string(),
+            user: "user".to_string(),
+            host: "localhost".to_string(),
+            port: 5432,
+            pass: "pass".to_string(),
+            max_connections: 20,
+            min_connections: 5
+        };
+
+        let db_url = db_url_from_params(&db_config);
+        assert_eq!(db_url, "postgresql://user:pass@localhost:5432/db");
+    }
+}

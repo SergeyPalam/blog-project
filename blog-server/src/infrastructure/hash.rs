@@ -13,3 +13,14 @@ pub fn verify_password(password: &str, hash: &str) -> Result<(), Error> {
     let parsed_hash = PasswordHash::new(hash)?;
     argon2.verify_password(password.as_bytes(), &parsed_hash)
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_hash_verify() {
+        let hash = hash_password("pass").unwrap();
+        assert!(verify_password("pass", &hash).is_ok());
+    }
+}
