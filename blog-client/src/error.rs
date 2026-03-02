@@ -1,16 +1,22 @@
 use reqwest::StatusCode;
 use thiserror::Error;
 
+/// Ошибки библиотеки
 #[derive(Debug, Error)]
 pub enum ClientError {
+    /// Ответ сервера, что запись уже существует
     #[error("User already exists: {0}")]
     AlreadyExists(String),
+    /// Попытка выполнить неавторизованный запрос
     #[error("User unauthorized: {0}")]
     Unauthorized(String),
+    /// Запись не найдена
     #[error("Not found: {0}")]
     NotFound(String),
+    /// Неизвестная ошибка сервера
     #[error("Unknown server error: {0}")]
     UnknownServerErr(String),
+    /// Внутренняя ошибка сервера
     #[error("Internal server error: {0}")]
     InternalError(String),
 }

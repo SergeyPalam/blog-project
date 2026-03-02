@@ -1,4 +1,4 @@
-pub mod proto;
+mod proto;
 
 use proto::blog_service_client::BlogServiceClient;
 use proto::*;
@@ -19,11 +19,24 @@ impl From<PostInfo> for pod::PostInfo {
     }
 }
 
+/// Клиент для взаимодействия с сервером по протоколу gRPC
+/// Пример:
+/// ```rust
+/// use blog_client::grpc_client::GrpcClient;
+/// use blog_client::error::ClientError;
+/// 
+/// #[tokio::main]
+/// async fn main() {
+///     let mut grpc_client = match GrpcClient::connect("http://127.0.0.1:50051").await.unwrap();
+///     let reg_resp = grpc_client.register("NewName", "NewMail", "NewPass").await.unwrap();
+/// }
+/// ``` 
 pub struct GrpcClient {
     client: BlogServiceClient<tonic::transport::Channel>,
 }
 
 impl GrpcClient {
+    /// Подключение к серверу с заданным адресом
     pub async fn connect(addr: &str) -> Result<Self, ClientError> {
         let client = match BlogServiceClient::connect(addr.to_string()).await {
             Ok(res) => res,
@@ -34,6 +47,7 @@ impl GrpcClient {
         Ok(Self { client })
     }
 
+    /// Регистрация нового пользователя
     pub async fn register(
         &mut self,
         username: String,
@@ -56,6 +70,7 @@ impl GrpcClient {
         Ok(reg_user)
     }
 
+    /// Вход зарегистрированного пользователя
     pub async fn login(
         &mut self,
         username: String,
@@ -73,6 +88,7 @@ impl GrpcClient {
         Ok(reg_user)
     }
 
+    /// Создание нового поста (Использует токен, полученный при авторизации)
     pub async fn create_post(
         &mut self,
         token: &str,
@@ -93,6 +109,7 @@ impl GrpcClient {
         Ok(response.into())
     }
 
+    /// Обновление поста (Использует токен, полученный при авторизации)
     pub async fn update_post(
         &mut self,
         token: &str,
@@ -115,6 +132,7 @@ impl GrpcClient {
         Ok(response.into())
     }
 
+    /// Удаление поста (Использует токен, полученный при авторизации)
     pub async fn delete_post(&mut self, token: &str, post_id: i64) -> Result<(), ClientError> {
         let _response = self
             .client
@@ -130,6 +148,7 @@ impl GrpcClient {
         Ok(())
     }
 
+    /// Получение поста
     pub async fn get_post(&mut self, post_id: i64) -> Result<pod::PostInfo, ClientError> {
         let response = self
             .client
@@ -140,6 +159,7 @@ impl GrpcClient {
         Ok(response.into())
     }
 
+    /// Получение списка постов
     pub async fn get_posts(
         &mut self,
         offset: i64,
