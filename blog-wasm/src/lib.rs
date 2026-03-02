@@ -3,7 +3,7 @@ pub mod pod;
 use wasm_bindgen::prelude::*;
 use serde::{Serialize, Deserialize};
 use web_sys::Storage;
-use gloo_net::http::{Request, Response};
+use gloo_net::http::Request;
 use jsonwebtoken::dangerous;
 use serde_json::json;
 
